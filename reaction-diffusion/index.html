@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8" />
+</head>
+
+<body>
+	<canvas id="drawable" width="256" height="256"></canvas>
+	<br>
+	<label>feed:</label><input type="range" id="f" max="0.1" step="0.001">
+	<br>
+	<label>kill:</label><input type="range" id="k" max="0.1" step="0.001">
+</body>
+
+<script>
+	const SIZE = 256;
+
+	let canvas = document.querySelector('#drawable');
+	// 描画用のコンテキストを取得する.
+	var context = canvas.getContext("2d");
+
+	let Du = 0.2; // 1/4以下なら差分法は安定？？？
+	let Dv = 0.1;
+	let F = 0.04;
+	let k = 0.06;
+
+	const u = makeEmptyArray(SIZE);
+	const v = makeEmptyArray(SIZE);
+
+
+	for (let i = 0; i < SIZE; ++i) {
+		for (let j = 0; j < SIZE; ++j) {
+			r2 = (i-SIZE/2)*(i-SIZE/2) + (j-SIZE/2)*(j-SIZE/2);
+			if(r2 > 100 && r2 < 2000){
+				v[i][j] = 0.5;
+			}
+
+		//	 u[i][j] = Math.random();
+		//	 v[i][j] = Math.random();
+		}
+	}
+
+
+	// 色々操作要素追加
+	let feed = document.querySelector('#f');
+	feed.value = F;
+	
+	feed.addEventListener("input",function(){
+		F = +this.value
+		console.log(this.value);
+	})
+
+	let kill = document.querySelector('#k');
+	kill.value = k;
+	
+	kill.addEventListener("input",function(){
+		k = +this.value
+		console.log(this.value);
+	})
+
+	let = isMouseDown = false;
+	canvas.onmousedown = function(e){
+		isMouseDown = true;
+		setVal(e);
+	};
+
+	canvas.onmouseup = function(){
+		isMouseDown = false;
+	};
+
+	canvas.onmousemove   = function(e){
+		if(isMouseDown) setVal(e);
+	};
+
+	function setVal(e){
+		let rect = e.target.getBoundingClientRect();
+		let x = e.clientX - rect.left;
+    	let y = e.clientY - rect.top;
+		v[x][y] = 1;
+
+		console.log(x, y);
+	}
+
+
+	// 計算部
+	loop = function () {
+
+		let _u = Array.from(u);
+		let _v = Array.from(v);
+
+		// 一変数　拡散方程式
+		for (let i = 0; i < SIZE; ++i) {
+			for (let j = 0; j < SIZE; ++j) {
+				
+				// ラグランジアン
+				lu = (_u[cInc(i)][j] + _u[cDec(i)][j] + _u[i][cInc(j)] + _u[i][cDec(j)] -4.0*_u[i][j]);
+				lv = (_v[cInc(i)][j] + _v[cDec(i)][j] + _v[i][cInc(j)] + _v[i][cDec(j)] -4.0*_v[i][j]);
+
+	
+				u[i][j] += + Du*lu - (_u[i][j] * _v[i][j] * _v[i][j]) + F*(1-_u[i][j]);
+				v[i][j] += + Dv*lv + (_u[i][j] * _v[i][j] * _v[i][j]) - (F+k)*_v[i][j];
+			}
+		}
+
+		let imageData = new ImageData(SIZE, SIZE);
+		let data = imageData.data;
+
+
+		for (let i = 0; i < SIZE; ++i) {
+			for (let j = 0; j < SIZE; ++j) {
+                let val = Math.floor(v[i][j] * 255);
+                if(val < 0) val = 0;
+                if(val > 255) val = 255;
+
+				// i as x, j as y
+				data[4*(SIZE*j + i) + 0] = 255;
+				data[4*(SIZE*j + i) + 1] = 255-val;
+				data[4*(SIZE*j + i) + 2] = 255;
+				data[4*(SIZE*j + i) + 3] = 255;
+			}
+		}
+
+		//console.log('loop');
+
+		context.putImageData(imageData, 0, 0);
+
+		function cInc(num){return ++num < SIZE ? num: num - SIZE;}
+		function cDec(num){return --num >= 0 ? num: num + SIZE;}
+	};
+
+
+
+	setInterval(loop, 10);
+
+	function makeEmptyArray(size) {
+		let arr = [];
+
+		for (let i = 0; i < size; ++i) {
+
+			let _arr = [];
+
+			for (let j = 0; j < size; ++j) {
+				_arr[j] = 0;
+			}
+
+			arr[i] = _arr;
+		}
+
+		return arr;
+	}
+
+
+</script>
+
+</html>
