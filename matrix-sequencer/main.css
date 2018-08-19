@@ -1,0 +1,44 @@
+.pad {
+    display: flex;
+    flex-flow: row nowrap; 
+}
+
+.flame {
+    display: flex;
+    flex-flow: column nowrap; 
+}
+
+input[type=checkbox] {
+    display: none;
+}
+
+label.note {
+    display: block;
+    margin: 3px;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #006DD9;
+    border-radius: 5px;
+    transition-duration: 0.1s;
+}
+
+label.note:hover {
+    transform: scale(1.2);
+}
+
+input:checked + label.note {
+    background: #0072ff;
+    box-shadow: 0 0px 10px #0070de;
+}
+
+
+label.inflame {
+    animation-name: blight;
+    animation-duration: 1000ms;
+}
+
+@keyframes blight {
+    0% {
+        box-shadow: 0 0px 10px #50fff6;
+    }
+}

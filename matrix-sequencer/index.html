@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>  
+<head>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" type="text/css" href="main.css">
+	<script src="notes.js"></script>
+	<script src="sound.js"></script>
+</head>
+<body>
+
+	<div class="container"></div>
+
+</body>
+
+
+<script>
+
+// id <=> flame:pichの形に相互変換
+const _D = ':';
+function implodeId(flame, pitch) {return flame+_D+pitch;}
+function explodeId(id) {return id.split(_D).map(v=>+v);}	// .mapでintに変換してる
+
+// pad描画用のDOMを生成
+function createPadDom(size)
+{
+	let pad = document.createElement('div');
+	pad.classList.add('pad');
+
+	for(i=0; i<size; i++){
+		let div = document.createElement('div');
+		div.classList.add('flame');
+
+
+		for(j=size-1; j>=0; j--){	// 大きい順に生成
+		
+			const id = implodeId(i, j);
+
+			let input = document.createElement('input');
+			input.type = "checkbox";
+			input.id = id;
+			input.onchange = flipNote;
+
+			let label = document.createElement('label');
+			label.classList.add('note');
+			label.setAttribute('for', id);
+			label.dataset.flame = i;
+			
+			// 光ってたら消すイベントリスナー
+			label.addEventListener("animationend", function(evt) {
+				this.classList.remove("inflame");
+			});
+
+			div.appendChild(input);
+			div.appendChild(label);
+		}
+
+		pad.appendChild(div);
+	}
+
+	return pad;
+}
+
+// ボタン押下時の実行メソッド
+function flipNote()
+{
+	[flame, pitch] = explodeId(this.id);
+
+	if(this.checked){
+		notes.addNote(flame, pitch);
+	}else{
+		notes.remNote(flame, pitch);
+	}
+}
+
+// 1フレーム分の音を鳴らす関数
+playOneFlame = (function()
+{
+	let flame = 0;
+
+	return function(){
+
+		// 光る
+		targets = document.querySelectorAll('[data-flame="'+flame+'"]');
+		for (var item of targets) {
+			item.classList.add('inflame');
+		}
+
+		t = Sound.getTime();
+
+		for (const pitch of notes.getNotesIn(flame)) {
+
+			sound = Sound.create(pitch);
+
+			sound.start(t);
+			sound.stop(t + 0.2);
+		}
+
+		flame = (flame+1)%SIZE;
+	}
+}());
+
+
+
+
+
+
+// メイン処理ここから
+
+// padのサイズ
+const SIZE = 10;
+
+// padを描画
+const element = document.querySelector(".container");
+element.appendChild( createPadDom(SIZE) );
+
+// 音を保持するデータセット
+const notes = new Notes();
+
+// ルート音をセット（基準ラからのオフセット）
+Sound.setRootPitch(-6);
+
+// 0.2秒ごとに音を鳴らす
+setInterval(playOneFlame, 200);
+
+
+</script>
+
+</html>  
